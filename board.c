@@ -188,6 +188,27 @@ void next_move(void)
    
    // Process to the next state
    chess_figure_t figure = chess_board[8*y0 + x0];
+   if(figure==W_KING) {
+     if(x0==4 && y0==0 && x1==6 && y1==0) {//castling
+        chess_board[5] = chess_board[7];
+        chess_board[7] = EMPTY;
+     }
+     if(x0==4 && y0==0 && x1==1 && y1==0) {//castling
+        chess_board[2] = chess_board[0];
+        chess_board[0] = EMPTY;
+     }
+   }
+   if(figure==B_KING) {
+     if(x0==4 && y0==7 && x1==6 && y1==7) {//castling
+        chess_board[61] = chess_board[63];
+        chess_board[63] = EMPTY;
+     }
+     if(x0==4 && y0==7 && x1==1 && y1==7) {//castling
+        chess_board[58] = chess_board[56];
+        chess_board[56] = EMPTY;
+     }
+   }
+
    chess_figure_t other  = chess_board[8*y1 + x1];
    if(other!=EMPTY) {
       if(other<=W_KING) captured_black_figures[captured_black_idx++] = other;

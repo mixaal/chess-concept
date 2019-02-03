@@ -157,7 +157,33 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
    figure_move(&legal_moves, chess_board, king, x+1, y-1);
    figure_move(&legal_moves, chess_board, king, x+1, y+1);
 
-   //FIXME castling
+   //FIXME castling: check that rooks and king didn't move and king didn't get check
+   if(is_white(king)) {
+      if(x==4 && y==0 && chess_board[5]==chess_board[6] && chess_board[5]==EMPTY && chess_board[7]==W_ROOK) {
+         legal_moves.x[legal_moves.N] = 6;
+         legal_moves.y[legal_moves.N] = 0;
+         legal_moves.N++;
+     }
+      if(x==4 && y==0 && chess_board[1]==chess_board[2] && chess_board[2]==chess_board[3] && chess_board[1]==EMPTY && chess_board[0]==W_ROOK) {
+     }
+         legal_moves.x[legal_moves.N] = 1;
+         legal_moves.y[legal_moves.N] = 0;
+         legal_moves.N++;
+   }
+   if(is_black(king)) {
+      if(x==4 && y==7 && chess_board[61]==chess_board[62] && chess_board[61]==EMPTY && chess_board[63]==B_ROOK) {
+         legal_moves.x[legal_moves.N] = 6;
+         legal_moves.y[legal_moves.N] = 7;
+         legal_moves.N++;
+     }
+      if(x==4 && y==7 && chess_board[57]==chess_board[58] && chess_board[58]==chess_board[59] && chess_board[58]==EMPTY && chess_board[56]==B_ROOK) {
+     }
+         legal_moves.x[legal_moves.N] = 1;
+         legal_moves.y[legal_moves.N] = 7;
+         legal_moves.N++;
+   }
+
+ 
    //FIXME check for white_king_check/black_king_check
 
    return legal_moves;
