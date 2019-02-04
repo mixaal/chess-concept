@@ -41,6 +41,7 @@
 #define KING_PRESSURE_MULT                           4
 
 float evaluate_position(chess_figure_t *chess_board, int white_is_playing);
+float mobility_evaluation(chess_figure_t *chess_board, int white_is_playing);
 
 
 #endif /* __MIX_CHESS_FITNESS_H__ */
