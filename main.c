@@ -13,10 +13,15 @@
 static int field_control[64];
 static chess_figure_t chess_board[64];
 
-int main(void)
+int main(int argc, char *argv[])
 {
   setlocale(LC_CTYPE, "en_US.UTF-8");
-  board_init(chess_board);
+  if(argc == 2) {
+    board_init(chess_board, argv[1]);
+  }
+  else {
+    board_init(chess_board, NULL);
+  }
   for(;;) {
     float f = evaluate_position(chess_board, who_is_playing());
     float mobility = mobility_evaluation(chess_board, who_is_playing());

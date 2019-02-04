@@ -10,7 +10,10 @@
 #include "chess_control.h"
 
 
-FILE *chess_log = NULL;
+static FILE *chess_log = NULL;
+static FILE *input_file = NULL;
+
+_Bool replay_as_parameter = False;
 
 static wchar_t chess_figures_symbols[] = {
   FULL_BLOCK_CHAR, 
@@ -60,10 +63,21 @@ static void chess_close(void)
     fclose(chess_log);
 }
 
-void board_init(chess_figure_t *chess_board)
+void board_init(chess_figure_t *chess_board, const char *replay_file)
 {
    chess_log = fopen("chess.log", "wb");
    if(chess_log!=NULL) atexit(chess_close);
+   if(replay_file!=NULL) {
+      replay_as_parameter = True;
+      input_file = fopen(replay_file, "rb");
+   }
+   if(input_file == NULL) {
+      replay_as_parameter = False;
+      if(replay_file!=NULL) {
+        wprintf(L"Error opening: %s\n", replay_file);
+      }
+      input_file = stdin;
+   }
    memset(chess_board, 0, 64 * sizeof(chess_figure_t));
    memset(captured_white_figures, 0, sizeof(captured_white_figures) * sizeof(chess_figure_t));
    memset(captured_black_figures, 0, sizeof(captured_black_figures) * sizeof(chess_figure_t));
@@ -159,11 +173,16 @@ char *get_console_input(void)
     while(got == NULL || input_len!=5) {
       memset(input, 0, sizeof(input));
       wprintf(L">");
-      if(feof(stdin)) exit(EXIT_SUCCESS);
-      got = fgets(input, sizeof(input), stdin);
+      if(feof(input_file)) {
+         if(replay_as_parameter) {
+           replay_as_parameter = False;
+           input_file = stdin;
+         } 
+         else exit(EXIT_SUCCESS);
+      }
+      got = fgets(input, sizeof(input), input_file);
       if(got!=NULL) input_len=strlen(got);
     } 
-    wprintf(L"got=%s\n", got);
     got[4]= '\0';
     if(!strcmp(got, "quit") || !strcmp(got, "exit")) exit(EXIT_SUCCESS);
     char x0 = got[0];

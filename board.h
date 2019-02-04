@@ -27,7 +27,7 @@
 #define B_PAWN_CHAR     L'\u265f'
 
 void print_field_control(int *field_control);
-void board_init(chess_figure_t *chess);
+void board_init(chess_figure_t *chess, const char *replay_file);
 void board_print(chess_figure_t *chess, int *field_control, _Bool display_control);
 char *get_console_input(void);
 void next_move(chess_figure_t *chess);
