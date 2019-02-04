@@ -156,7 +156,7 @@ char *get_console_input(void)
   for(;;) {
     got = NULL;
     input_len = -1;
-    while(got == NULL && input_len!=5) {
+    while(got == NULL || input_len!=5) {
       memset(input, 0, sizeof(input));
       wprintf(L">");
       if(feof(stdin)) exit(EXIT_SUCCESS);
