@@ -6,22 +6,7 @@
 
 #include "chess_types.h"
 #include "legal_moves.h"
-
-#define FULL_BLOCK_CHAR L'\u2588'
-#define SPACE_CHAR      L'\x20'
-#define NEW_LINE_CHAR   L'\x0a'
-#define W_KING_CHAR     L'\u2654'
-#define W_QUEEN_CHAR    L'\u2655'
-#define W_ROOK_CHAR     L'\u2656'
-#define W_BISHOP_CHAR   L'\u2657'
-#define W_KNIGHT_CHAR   L'\u2658'
-#define W_PAWN_CHAR     L'\u2659'
-#define B_KING_CHAR     L'\u265a'
-#define B_QUEEN_CHAR    L'\u265b'
-#define B_ROOK_CHAR     L'\u265c'
-#define B_BISHOP_CHAR   L'\u265d'
-#define B_KNIGHT_CHAR   L'\u265e'
-#define B_PAWN_CHAR     L'\u265f'
+#include "board.h"
 
 static wchar_t chess_figures_symbols[] = {
   FULL_BLOCK_CHAR, 
@@ -29,6 +14,7 @@ static wchar_t chess_figures_symbols[] = {
   B_PAWN_CHAR, B_ROOK_CHAR, B_KNIGHT_CHAR, B_BISHOP_CHAR, B_QUEEN_CHAR, B_KING_CHAR
 };
 
+static int field_control[64];
 static chess_figure_t chess_board[64];
 static chess_figure_t captured_white_figures[16];
 static chess_figure_t captured_black_figures[16];
@@ -36,6 +22,54 @@ static int captured_white_idx = 0;
 static int captured_black_idx = 0;
 
 static int white_on_the_move = 1;
+
+void print_field_control(void)
+{
+  for(int y=7; y>=0; y--) {
+    wprintf(L"%d  ", y+1);
+    for(int x=0; x<8; x++) {
+      switch(field_control[x+8*y]&3) {
+      case CTRL_NOBODY:
+        wprintf(L"%s%lc%lc%lc%lc", ANSI_COLOR_RESET, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR);
+        break;
+      case CTRL_WHITE:
+        wprintf(L"%s%lc%lc%lc%lc", ANSI_COLOR_BLUE, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR);
+        break;
+      case CTRL_BLACK:
+        wprintf(L"%s%lc%lc%lc%lc", ANSI_COLOR_RED, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR);
+        break;
+      case CTRL_BOTH:
+        wprintf(L"%s%lc%lc%lc%lc", ANSI_COLOR_YELLOW, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR, FULL_BLOCK_CHAR);
+        break;
+      }
+    }
+    wprintf(L"%s\n", ANSI_COLOR_RESET);
+  }
+}
+
+void compute_field_control(void)
+{
+  for(int i=0; i<64; i++) {
+      if(is_white(chess_board[i])) { field_control[i]=PLACE_WHITE;  }
+      if(is_black(chess_board[i])) { field_control[i]=PLACE_BLACK;  }
+      field_control[i]|=CTRL_NOBODY;
+  }
+  for(int i=0; i<64; i++) {
+    int mask = 0;
+    // Skip empty fields
+    if(chess_board[i] == EMPTY) continue;
+    // Setup masks
+    if(is_white(chess_board[i])) mask=CTRL_WHITE;
+    if(is_black(chess_board[i])) mask=CTRL_BLACK;
+    int x = i % 8;
+    int y = i / 8;
+    move_t legal_moves = get_legal_moves(chess_board, chess_board[i], x , y, True);
+    for(int j=0; j<legal_moves.N; j++) {
+       int offset = legal_moves.x[j] + legal_moves.y[j] * 8;
+       field_control[offset] |= mask;
+    }
+  }
+}
 
 void board_init(void)
 {
@@ -59,7 +93,20 @@ void board_init(void)
    chess_board[60] = B_KING;
 }
 
-void board_print(void)
+static void print_empty(_Bool display_control, int idx, int control)
+{
+        if(!display_control) 
+          wprintf(L"%lc", (idx&1) ? SPACE_CHAR : FULL_BLOCK_CHAR); 
+        else {
+          if(control!=CTRL_NOBODY) {
+            wprintf(L"%lc", FULL_BLOCK_CHAR); 
+          } else 
+            wprintf(L"%lc", (idx&1) ? SPACE_CHAR : FULL_BLOCK_CHAR); 
+        }
+ 
+}
+
+void board_print(_Bool display_control)
 {
   setlocale(LC_CTYPE, "en_US.UTF-8");
   if(white_on_the_move) wprintf(L"WHITE is playing:"); 
@@ -69,18 +116,28 @@ void board_print(void)
      wprintf(L"%lc", NEW_LINE_CHAR);
      wprintf(L"%d  ", y+1);
      for (int x=0; x<8; x++) {
+        int control = field_control[y*8+x]&3;
+        if(display_control) {
+        switch(control) {
+          case CTRL_NOBODY: wprintf(L"%s", ANSI_COLOR_RESET); break;
+          case CTRL_BOTH:   wprintf(L"%s", ANSI_COLOR_YELLOW); break;
+          case CTRL_WHITE:  wprintf(L"%s", ANSI_COLOR_BLUE); break;
+          case CTRL_BLACK:  wprintf(L"%s", ANSI_COLOR_RED); break;
+        };
+        }
         chess_figure_t figure = chess_board[y*8+x];
-        wprintf(L"%lc", (idx&1) ? SPACE_CHAR : FULL_BLOCK_CHAR); 
+        print_empty(display_control, idx, control);
         switch(figure) {
         case EMPTY: 
-          wprintf(L"%lc", (idx&1) ? SPACE_CHAR: FULL_BLOCK_CHAR); 
-          wprintf(L"%lc", (idx&1) ? SPACE_CHAR: FULL_BLOCK_CHAR); 
+          print_empty(display_control, idx, control);
+          print_empty(display_control, idx, control);
           break;
         default:
           wprintf(L"%lc", chess_figures_symbols[figure]);
           wprintf(L"%lc", SPACE_CHAR); 
         }
-        wprintf(L"%lc", (idx&1) ? SPACE_CHAR: FULL_BLOCK_CHAR); 
+        print_empty(display_control, idx, control);
+        wprintf(L"%s", ANSI_COLOR_RESET); 
         idx++;
      }
      if(y==0) for(int i=0;i<captured_white_idx;i++) {
@@ -128,33 +185,7 @@ static char *is_valid_move(int x0, int y0, int x1, int y1)
   } else {
     if(!is_black(figure)) return "black is on the move, this figure is a white one"; 
   }
-  move_t legal_moves;
-  switch(figure) {
-  case W_PAWN:
-  case B_PAWN:
-    legal_moves = pawn_legal_moves(chess_board, figure, x0, y0);
-    break;   
-  case W_ROOK:
-  case B_ROOK:
-    legal_moves = rook_legal_moves(chess_board, figure, x0, y0);
-    break;
-  case W_BISHOP:
-  case B_BISHOP:
-    legal_moves = bishop_legal_moves(chess_board, figure, x0, y0);
-    break;
-  case W_QUEEN:
-  case B_QUEEN:
-    legal_moves = queen_legal_moves(chess_board, figure, x0, y0);
-    break;
-  case W_KING:
-  case B_KING:
-    legal_moves = king_legal_moves(chess_board, figure, x0, y0);
-    break;
-  case W_KNIGHT:
-  case B_KNIGHT:
-    legal_moves = knight_legal_moves(chess_board, figure, x0, y0);
-    break;
-  }
+  move_t legal_moves = get_legal_moves(chess_board, figure, x0, y0, False);
   if(legal_moves.N==0) {
     return "no legal moves for this figure";
   }
@@ -223,7 +254,9 @@ int main(void)
 {
   board_init();
   for(;;) {
-    board_print();
+    compute_field_control();
+    board_print(True);
+    print_field_control();
     next_move();
   }
   return EXIT_SUCCESS;

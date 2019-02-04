@@ -27,7 +27,7 @@ _Bool black_king_check(chess_figure_t *chess_board)
 }
 
 
-static _Bool figure_move(move_t *legal_moves, chess_figure_t *chess_board, chess_figure_t my, int tx, int y)
+static _Bool figure_move(move_t *legal_moves, chess_figure_t *chess_board, chess_figure_t my, int tx, int y, _Bool control)
 {
      if(tx<0 || tx>7 || y<0 || y>7) return 0;
      chess_figure_t other = chess_board[tx+8*y];
@@ -35,8 +35,18 @@ static _Bool figure_move(move_t *legal_moves, chess_figure_t *chess_board, chess
      //wprintf(L"check move: %d %d other=%d\n", tx, y, other);
      //wprintf(L"check move: is_white(other)=%d is_white(my)=%d is_black(other)=%d is_black(my)=%d\n", is_white(other), is_white(my), is_black(other), is_black(my));
      if(other!=EMPTY) {
-       if(is_white(other)==is_white(my)) return 1;
-       if(is_black(other)==is_black(my)) return 1;
+       if(!control) {
+         if(is_white(other)==is_white(my)) return 1;
+         if(is_black(other)==is_black(my)) return 1;
+       }
+       else {
+         if(is_white(other)==is_white(my) || is_black(other) == is_black(my)) {
+           legal_moves->N ++;
+           legal_moves->x[idx] = tx;
+           legal_moves->y[idx] = y;
+           return 1;
+         }
+       }
        //wprintf(L"check_move: passed own figure");
        if((is_white(other)==is_black(my)) || (is_black(other)==is_white(my))) {
          //wprintf(L"check_move: capture figure");
@@ -60,14 +70,14 @@ static _Bool figure_move(move_t *legal_moves, chess_figure_t *chess_board, chess
 
      return 0;
 }
-static void __rook_legal_moves(move_t *legal_moves, chess_figure_t *chess_board, chess_figure_t rook, int x, int y)
+static void __rook_legal_moves(move_t *legal_moves, chess_figure_t *chess_board, chess_figure_t rook, int x, int y, _Bool control)
 {
   
    // to the right
    for(int dx=1; dx<=7; dx++) {
      int tx=x+dx;
      if(tx>7) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, rook, tx, y)) break;
+     if(figure_move(legal_moves, chess_board, rook, tx, y, control)) break;
    }
    //wprintf(L"check the right: %d\n", legal_moves.N);
 
@@ -75,7 +85,7 @@ static void __rook_legal_moves(move_t *legal_moves, chess_figure_t *chess_board,
    for(int dx=1; dx<=7; dx++) {
      int tx=x-dx;
      if(tx<0) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, rook, tx, y)) break;
+     if(figure_move(legal_moves, chess_board, rook, tx, y, control)) break;
    }
    //wprintf(L"check the left: %d\n", legal_moves.N);
 
@@ -83,79 +93,81 @@ static void __rook_legal_moves(move_t *legal_moves, chess_figure_t *chess_board,
    for(int dx=1; dx<=7; dx++) {
      int ty=y-dx;
      if(ty<0) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, rook, x, ty)) break;
+     if(figure_move(legal_moves, chess_board, rook, x, ty, control)) break;
    }
    //wprintf(L"check the up: %d\n", legal_moves.N);
    // down
    for(int dx=1; dx<=7; dx++) {
      int ty=y+dx;
      if(ty>7) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, rook, x, ty)) break;
+     if(figure_move(legal_moves, chess_board, rook, x, ty, control)) break;
    }
    //wprintf(L"check the down: %d\n", legal_moves.N);
 } 
 
 
-static void __bishop_legal_moves(move_t *legal_moves, chess_figure_t *chess_board, chess_figure_t bishop, int x, int y) {
+static void __bishop_legal_moves(move_t *legal_moves, chess_figure_t *chess_board, chess_figure_t bishop, int x, int y, _Bool control) {
    for(int dx=1; dx<=7; dx++) {
      int tx=x+dx;
      int ty=y+dx;
      if(tx>7 || ty>7) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, bishop, tx, ty)) break;
+     if(figure_move(legal_moves, chess_board, bishop, tx, ty, control)) break;
    }
 
    for(int dx=1; dx<=7; dx++) {
      int tx=x-dx;
      int ty=y-dx;
      if(tx<0 || ty<0) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, bishop, tx, ty)) break;
+     if(figure_move(legal_moves, chess_board, bishop, tx, ty, control)) break;
    }
  
    for(int dx=1; dx<=7; dx++) {
      int tx=x+dx;
      int ty=y-dx;
      if(tx>7 || ty<0) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, bishop, tx, ty)) break;
+     if(figure_move(legal_moves, chess_board, bishop, tx, ty, control)) break;
    }
 
    for(int dx=1; dx<=7; dx++) {
      int tx=x-dx;
      int ty=y+dx;
      if(tx<0 || ty>7) continue; // out-of-range
-     if(figure_move(legal_moves, chess_board, bishop, tx, ty)) break;
+     if(figure_move(legal_moves, chess_board, bishop, tx, ty, control)) break;
    }
 }
 
-move_t knight_legal_moves(chess_figure_t *chess_board, chess_figure_t knight, int x, int y)
+move_t knight_legal_moves(chess_figure_t *chess_board, chess_figure_t knight, int x, int y, _Bool control)
 {
    move_t legal_moves;
    legal_moves.N = 0;
-   figure_move(&legal_moves, chess_board, knight, x+1, y-2);
-   figure_move(&legal_moves, chess_board, knight, x-1, y-2);
-   figure_move(&legal_moves, chess_board, knight, x+2, y-1);
-   figure_move(&legal_moves, chess_board, knight, x-2, y-1);
+   figure_move(&legal_moves, chess_board, knight, x+1, y-2, control);
+   figure_move(&legal_moves, chess_board, knight, x-1, y-2, control);
+   figure_move(&legal_moves, chess_board, knight, x+2, y-1, control);
+   figure_move(&legal_moves, chess_board, knight, x-2, y-1, control);
 
-   figure_move(&legal_moves, chess_board, knight, x+1, y+2);
-   figure_move(&legal_moves, chess_board, knight, x-1, y+2);
-   figure_move(&legal_moves, chess_board, knight, x+2, y+1);
-   figure_move(&legal_moves, chess_board, knight, x-2, y+1);
+   figure_move(&legal_moves, chess_board, knight, x+1, y+2, control);
+   figure_move(&legal_moves, chess_board, knight, x-1, y+2, control);
+   figure_move(&legal_moves, chess_board, knight, x+2, y+1, control);
+   figure_move(&legal_moves, chess_board, knight, x-2, y+1, control);
    return legal_moves;
 }
 
-move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x, int y)
+move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x, int y, _Bool control)
 {
 
    move_t legal_moves;
    legal_moves.N = 0;
-   figure_move(&legal_moves, chess_board, king, x+1, y);
-   figure_move(&legal_moves, chess_board, king, x, y+1);
-   figure_move(&legal_moves, chess_board, king, x-1, y);
-   figure_move(&legal_moves, chess_board, king, x, y-1);
+   figure_move(&legal_moves, chess_board, king, x+1, y, control);
+   figure_move(&legal_moves, chess_board, king, x, y+1, control);
+   figure_move(&legal_moves, chess_board, king, x-1, y, control);
+   figure_move(&legal_moves, chess_board, king, x, y-1, control);
 
-   figure_move(&legal_moves, chess_board, king, x-1, y-1);
-   figure_move(&legal_moves, chess_board, king, x-1, y+1);
-   figure_move(&legal_moves, chess_board, king, x+1, y-1);
-   figure_move(&legal_moves, chess_board, king, x+1, y+1);
+   figure_move(&legal_moves, chess_board, king, x-1, y-1, control);
+   figure_move(&legal_moves, chess_board, king, x-1, y+1, control);
+   figure_move(&legal_moves, chess_board, king, x+1, y-1, control);
+   figure_move(&legal_moves, chess_board, king, x+1, y+1, control);
+
+   if(control) return legal_moves; // FIXME: is this correct?
 
    //FIXME castling: check that rooks and king didn't move and king didn't get check
    if(is_white(king)) {
@@ -165,10 +177,10 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
          legal_moves.N++;
      }
       if(x==4 && y==0 && chess_board[1]==chess_board[2] && chess_board[2]==chess_board[3] && chess_board[1]==EMPTY && chess_board[0]==W_ROOK) {
-     }
          legal_moves.x[legal_moves.N] = 1;
          legal_moves.y[legal_moves.N] = 0;
          legal_moves.N++;
+       }
    }
    if(is_black(king)) {
       if(x==4 && y==7 && chess_board[61]==chess_board[62] && chess_board[61]==EMPTY && chess_board[63]==B_ROOK) {
@@ -177,10 +189,10 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
          legal_moves.N++;
      }
       if(x==4 && y==7 && chess_board[57]==chess_board[58] && chess_board[58]==chess_board[59] && chess_board[58]==EMPTY && chess_board[56]==B_ROOK) {
-     }
          legal_moves.x[legal_moves.N] = 1;
          legal_moves.y[legal_moves.N] = 7;
          legal_moves.N++;
+     }
    }
 
  
@@ -190,36 +202,36 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
 }
 
 
-move_t queen_legal_moves(chess_figure_t *chess_board, chess_figure_t queen, int x, int y)
+move_t queen_legal_moves(chess_figure_t *chess_board, chess_figure_t queen, int x, int y, _Bool control)
 {
   
    move_t legal_moves;
    legal_moves.N = 0;
-   __bishop_legal_moves(&legal_moves, chess_board, queen, x, y);  
-   __rook_legal_moves(&legal_moves, chess_board, queen, x, y);  
+   __bishop_legal_moves(&legal_moves, chess_board, queen, x, y, control);  
+   __rook_legal_moves(&legal_moves, chess_board, queen, x, y, control);  
    return legal_moves;
 }
 
 
-move_t bishop_legal_moves(chess_figure_t *chess_board, chess_figure_t bishop, int x, int y)
+move_t bishop_legal_moves(chess_figure_t *chess_board, chess_figure_t bishop, int x, int y, _Bool control)
 {
   
    move_t legal_moves;
    legal_moves.N = 0;
-   __bishop_legal_moves(&legal_moves, chess_board, bishop, x, y);  
+   __bishop_legal_moves(&legal_moves, chess_board, bishop, x, y, control);  
    return legal_moves;
 }
 
-move_t rook_legal_moves(chess_figure_t *chess_board, chess_figure_t rook, int x, int y)
+move_t rook_legal_moves(chess_figure_t *chess_board, chess_figure_t rook, int x, int y, _Bool control)
 {
   
    move_t legal_moves;
    legal_moves.N = 0;
-   __rook_legal_moves(&legal_moves, chess_board, rook, x, y);
+   __rook_legal_moves(&legal_moves, chess_board, rook, x, y, control);
    return legal_moves;
 } 
 
-move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x, int y)
+move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x, int y, _Bool control)
 {
    move_t legal_moves;
    legal_moves.N = 0;
@@ -228,6 +240,7 @@ move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x,
    switch(pawn) {
    case W_PAWN:
      // 1 position straight
+     if(!control) {
      if(chess_board[(y+1)*8+x]==EMPTY) {
       //wprintf(L"check: x=%d  y=%d\n", x, y+1);
       legal_moves.N ++;
@@ -243,6 +256,7 @@ move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x,
       legal_moves.x[idx] = x;
       legal_moves.y[idx++] = y+2;
       //wprintf(L"got: x=%d  y=%d\n", x, y+2);
+     }
      }
      // capture - left
      if(x>0) { 
@@ -264,6 +278,7 @@ move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x,
      }
      break;
    case B_PAWN:
+     if(!control) {
      // 1 position straight
      if(chess_board[(y-1)*8+x]==EMPTY) {
       legal_moves.N ++;
@@ -286,6 +301,7 @@ move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x,
          legal_moves.y[idx++] = y-1;
        }
      }
+     }
      // capture - right
      if(x<7) { 
        chess_figure_t figure = chess_board[(y-1)*8+x+1];
@@ -302,3 +318,45 @@ move_t pawn_legal_moves(chess_figure_t *chess_board, chess_figure_t pawn, int x,
    }
    return legal_moves;
 }
+
+move_t get_legal_moves(chess_figure_t *chess_board, chess_figure_t figure, int x0, int y0, _Bool control)
+{
+move_t legal_moves;
+switch(figure) {
+  case W_PAWN:
+  case B_PAWN:
+    legal_moves = pawn_legal_moves(chess_board, figure, x0, y0, control);
+    break;   
+  case W_ROOK:
+  case B_ROOK:
+    legal_moves = rook_legal_moves(chess_board, figure, x0, y0, control);
+    break;
+  case W_BISHOP:
+  case B_BISHOP:
+    legal_moves = bishop_legal_moves(chess_board, figure, x0, y0, control);
+    break;
+  case W_QUEEN:
+  case B_QUEEN:
+    legal_moves = queen_legal_moves(chess_board, figure, x0, y0, control);
+    break;
+  case W_KING:
+  case B_KING:
+    legal_moves = king_legal_moves(chess_board, figure, x0, y0, control);
+    break;
+  case W_KNIGHT:
+  case B_KNIGHT:
+    legal_moves = knight_legal_moves(chess_board, figure, x0, y0, control);
+    break;
+  }
+#if 0
+  for(int i=0; i<legal_moves.N; i++) {
+    if(legal_moves.y[i]==2) {
+       wprintf(L"figure:%d [%c%d]\n", figure, 'a'+x0, 1+y0);
+       exit(-1);
+    }
+  }
+#endif
+  return legal_moves;
+}
+
+
