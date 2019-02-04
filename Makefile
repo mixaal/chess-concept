@@ -3,8 +3,8 @@ CFLAGS=-Wall
 LIBS=
 RM=rm -f
 
-PROG=board
-OBJECTS=board.o legal_moves.o chess_control.o
+PROG=chess
+OBJECTS=main.o board.o legal_moves.o chess_control.o
 
 all: $(PROG)
 

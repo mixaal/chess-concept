@@ -15,8 +15,6 @@ static wchar_t chess_figures_symbols[] = {
   B_PAWN_CHAR, B_ROOK_CHAR, B_KNIGHT_CHAR, B_BISHOP_CHAR, B_QUEEN_CHAR, B_KING_CHAR
 };
 
-static int field_control[64];
-static chess_figure_t chess_board[64];
 static chess_figure_t captured_white_figures[16];
 static chess_figure_t captured_black_figures[16];
 static int captured_white_idx = 0;
@@ -24,7 +22,7 @@ static int captured_black_idx = 0;
 
 static int white_on_the_move = 1;
 
-void print_field_control(void)
+void print_field_control(int *field_control)
 {
   for(int y=7; y>=0; y--) {
     wprintf(L"%d  ", y+1);
@@ -48,9 +46,9 @@ void print_field_control(void)
   }
 }
 
-void board_init(void)
+void board_init(chess_figure_t *chess_board)
 {
-   memset(chess_board, 0, sizeof(chess_board) * sizeof(chess_figure_t));
+   memset(chess_board, 0, 64 * sizeof(chess_figure_t));
    memset(captured_white_figures, 0, sizeof(captured_white_figures) * sizeof(chess_figure_t));
    memset(captured_black_figures, 0, sizeof(captured_black_figures) * sizeof(chess_figure_t));
 
@@ -83,11 +81,17 @@ static void print_empty(_Bool display_control, int idx, int control)
  
 }
 
-void board_print(_Bool display_control)
+void board_print(chess_figure_t *chess_board, int *field_control, _Bool display_control)
 {
   setlocale(LC_CTYPE, "en_US.UTF-8");
   if(white_on_the_move) wprintf(L"WHITE is playing:"); 
-  else wprintf(L"BLACK is playing:"); 
+  else                  wprintf(L"BLACK is playing:"); 
+  if(white_king_check(field_control, True)) {
+       wprintf(L"  !!! white king check !!!");
+  }
+  if(black_king_check(field_control, True)) {
+       wprintf(L"  !!! black king check !!!");
+  }
   for(int y=7; y>=0; y--) {
      int idx = y&1;
      wprintf(L"%lc", NEW_LINE_CHAR);
@@ -130,7 +134,7 @@ void board_print(_Bool display_control)
   wprintf(L"    a   b   c   d    e   f   g   h\n");
 }
 
-static char *get_console_input(void)
+char *get_console_input(void)
 {
   char input[100], *got = NULL;
   for(;;) {
@@ -150,7 +154,7 @@ static char *get_console_input(void)
   }
 }
 
-static char *is_valid_move(int x0, int y0, int x1, int y1)
+static char *is_valid_move(chess_figure_t *chess_board, int x0, int y0, int x1, int y1)
 {
   
   chess_figure_t figure = chess_board[8*y0 + x0];
@@ -178,7 +182,7 @@ static char *is_valid_move(int x0, int y0, int x1, int y1)
   return "your move is not in a set of legal moves";
 }
 
-void next_move(void)
+void next_move(chess_figure_t *chess_board)
 {
    char *err = NULL;
    int x0, y0, x1, y1;
@@ -188,7 +192,7 @@ void next_move(void)
      x1 = next_move[2] - 'a';
      y0 = next_move[1] - '1';
      y1 = next_move[3] - '1';
-     err = is_valid_move(x0, y0, x1, y1);
+     err = is_valid_move(chess_board, x0, y0, x1, y1);
      if(err!=NULL) {
        wprintf(L"Invalid move: %s\n", err);
      }
@@ -204,16 +208,4 @@ void next_move(void)
    wprintf(L"valid move2: %d %d\n", x1, y1);
    do_chess_move(chess_board, x0, y0, x1, y1);
    white_on_the_move ^= 1;
-}
-
-int main(void)
-{
-  board_init();
-  for(;;) {
-    compute_field_control(chess_board, field_control);
-    board_print(True);
-    print_field_control();
-    next_move();
-  }
-  return EXIT_SUCCESS;
 }

@@ -7,6 +7,12 @@
 #include "legal_moves.h"
 #include "chess_control.h"
 
+static _Bool white_king_moved = False;
+static _Bool black_king_moved = False;
+
+static _Bool white_king_checked = False;
+static _Bool black_king_checked = False;
+
 static int white_king_x = 4;
 static int white_king_y = 0;
 
@@ -15,12 +21,14 @@ static int black_king_y = 7;
 
 void set_white_king(int x, int y)
 {
+  white_king_moved = True;
   white_king_x = x;
   white_king_y = y;
 }
 
 void set_black_king(int x, int y)
 {
+  black_king_moved = True;
   black_king_x = x;
   black_king_y = y;
 }
@@ -35,17 +43,23 @@ _Bool is_black(chess_figure_t figure)
   return figure >= B_PAWN && figure <= B_KING;
 }
 
-_Bool white_king_check(int *field_control_copy)
+_Bool white_king_check(int *field_control_copy, _Bool real_board)
 {
   int control = field_control_copy[white_king_x + 8*white_king_y] & CTRL_MASK;
-  if (control&CTRL_BLACK) return True;
+  if (control&CTRL_BLACK) {
+    if(real_board) white_king_checked = True;
+    return True;
+  }
   return False;
 }
 
-_Bool black_king_check(int *field_control_copy)
+_Bool black_king_check(int *field_control_copy, _Bool real_board)
 {
   int control = field_control_copy[black_king_x + 8*black_king_y] & CTRL_MASK;
-  if (control&CTRL_WHITE) return True;
+  if (control&CTRL_WHITE) {
+    if(real_board) black_king_checked = True;
+    return True;
+  }
   return False;
 }
 
@@ -91,7 +105,7 @@ static void add_legal_move(move_t *legal_moves, chess_figure_t *chess_board_copy
    if(control) goto ADD_MOVE;
    do_chess_move(chess_board_copy, orig_x, orig_y, tx, ty);
    compute_field_control(chess_board_copy, field_control);
-   _Bool legal = (is_white(my) && !white_king_check(field_control)) || (is_black(my) && !black_king_check(field_control)) ;
+   _Bool legal = (is_white(my) && !white_king_check(field_control, False)) || (is_black(my) && !black_king_check(field_control, False)) ;
 
   if(!legal) return;
 ADD_MOVE:
@@ -143,7 +157,6 @@ static _Bool figure_move(move_t *legal_moves, chess_figure_t *chess_board, chess
         exit(EXIT_FAILURE);
      }
      //wprintf(L"legal move: %d %d\n", tx, y);
-     //FIXME check for white_king_check/black_king_check
      add_legal_move(legal_moves, chess_board_copy, field_control_copy, my, orig_x, orig_y, tx, y, control);
      return 0;
 }
@@ -246,8 +259,8 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
 
    if(control) return legal_moves; // FIXME: is this correct?
 
-   //FIXME castling: check that rooks and king didn't move and king didn't get check
-   if(is_white(king)) {
+   //FIXME rook moved?
+   if(!white_king_checked && !white_king_moved && is_white(king)) {
       if(x==4 && y==0 && chess_board[5]==chess_board[6] && chess_board[5]==EMPTY && chess_board[7]==W_ROOK) {
          copy_chess_board(chess_board);
          add_legal_move(&legal_moves, chess_board_copy, field_control_copy, W_KING, 4, 0, 6, 0, control);
@@ -257,7 +270,7 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
          add_legal_move(&legal_moves, chess_board_copy, field_control_copy, W_KING, 4, 0, 1, 0, control);
        }
    }
-   if(is_black(king)) {
+   if(!black_king_checked && !black_king_moved && is_black(king)) {
       if(x==4 && y==7 && chess_board[61]==chess_board[62] && chess_board[61]==EMPTY && chess_board[63]==B_ROOK) {
          copy_chess_board(chess_board);
          add_legal_move(&legal_moves, chess_board_copy, field_control_copy, W_KING, 4, 7, 6, 7, control);
