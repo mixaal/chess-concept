@@ -88,7 +88,6 @@ static void print_empty(_Bool display_control, int idx, int control)
 
 void board_print(chess_figure_t *chess_board, int *field_control, _Bool display_control)
 {
-  setlocale(LC_CTYPE, "en_US.UTF-8");
   if(white_on_the_move) wprintf(L"WHITE is playing:"); 
   else                  wprintf(L"BLACK is playing:"); 
   if(white_king_check(field_control, True)) {
@@ -210,7 +209,7 @@ void next_move(chess_figure_t *chess_board)
       if(other<=W_KING) captured_black_figures[captured_black_idx++] = other;
       else              captured_white_figures[captured_white_idx++] = other;
    }
-   wprintf(L"valid move2: %d %d\n", x1, y1);
+   //wprintf(L"valid move2: %d %d\n", x1, y1);
    do_chess_move(chess_board, x0, y0, x1, y1, True);
    white_on_the_move ^= 1;
 }
