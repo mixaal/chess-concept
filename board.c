@@ -211,6 +211,6 @@ void next_move(chess_figure_t *chess_board)
       else              captured_white_figures[captured_white_idx++] = other;
    }
    wprintf(L"valid move2: %d %d\n", x1, y1);
-   do_chess_move(chess_board, x0, y0, x1, y1);
+   do_chess_move(chess_board, x0, y0, x1, y1, True);
    white_on_the_move ^= 1;
 }

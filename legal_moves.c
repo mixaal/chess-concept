@@ -19,18 +19,20 @@ static int white_king_y = 0;
 static int black_king_x = 4;
 static int black_king_y = 7;
 
-void set_white_king(int x, int y)
+void set_white_king(int x, int y, int tx, int ty, _Bool real_board)
 {
-  white_king_moved = True;
-  white_king_x = x;
-  white_king_y = y;
+  if(real_board && x!=tx && y!=tx)  
+    white_king_moved = True;
+  white_king_x = tx;
+  white_king_y = ty;
 }
 
-void set_black_king(int x, int y)
+void set_black_king(int x, int y, int tx, int ty, _Bool real_board)
 {
-  black_king_moved = True;
-  black_king_x = x;
-  black_king_y = y;
+  if(real_board && x!=tx && y!=tx)  
+    black_king_moved = True;
+  black_king_x = tx;
+  black_king_y = ty;
 }
 
 _Bool is_white(chess_figure_t figure)
@@ -66,7 +68,7 @@ _Bool black_king_check(int *field_control_copy, _Bool real_board)
 static chess_figure_t chess_board_copy[64];
 static int field_control_copy[64];
 
-void do_chess_move(chess_figure_t *chess_board, int x0, int y0, int x1, int y1)
+void do_chess_move(chess_figure_t *chess_board, int x0, int y0, int x1, int y1, _Bool real_board)
 {
    wprintf(L"do_chess_move: chess_board=%p x0=%d y0=%d x1=%d y1=%d %c%d\n", chess_board, x0, y0, x1, y1, x1+'a', 1+y1);
    chess_figure_t figure = chess_board[8*y0 + x0];
@@ -92,8 +94,8 @@ void do_chess_move(chess_figure_t *chess_board, int x0, int y0, int x1, int y1)
    }
 
    /** Update king's position */
-   if(figure==W_KING) set_white_king(x1, y1);
-   if(figure==B_KING) set_black_king(x1, y1);
+   if(figure==W_KING) set_white_king(x0, y0, x1, y1, real_board);
+   if(figure==B_KING) set_black_king(x0, y0, x1, y1, real_board);
 
 
    chess_board[8*y0 + x0] = EMPTY;
@@ -103,7 +105,7 @@ void do_chess_move(chess_figure_t *chess_board, int x0, int y0, int x1, int y1)
 static void add_legal_move(move_t *legal_moves, chess_figure_t *chess_board_copy, int *field_control, chess_figure_t my, int orig_x, int orig_y, int tx, int ty, _Bool control)
 {
    if(control) goto ADD_MOVE;
-   do_chess_move(chess_board_copy, orig_x, orig_y, tx, ty);
+   do_chess_move(chess_board_copy, orig_x, orig_y, tx, ty, False);
    compute_field_control(chess_board_copy, field_control);
    _Bool legal = (is_white(my) && !white_king_check(field_control, False)) || (is_black(my) && !black_king_check(field_control, False)) ;
 
@@ -260,6 +262,7 @@ move_t king_legal_moves(chess_figure_t *chess_board, chess_figure_t king, int x,
    if(control) return legal_moves; // FIXME: is this correct?
 
    //FIXME rook moved?
+   wprintf(L"white_king_checked=%d white_king_moved=%d\n", white_king_checked, white_king_moved);
    if(!white_king_checked && !white_king_moved && is_white(king)) {
       if(x==4 && y==0 && chess_board[5]==chess_board[6] && chess_board[5]==EMPTY && chess_board[7]==W_ROOK) {
          copy_chess_board(chess_board);
