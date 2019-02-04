@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -Wstrict-prototypes -ggdb
 LIBS=
 RM=rm -f
 

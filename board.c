@@ -9,6 +9,9 @@
 #include "board.h"
 #include "chess_control.h"
 
+
+FILE *chess_log = NULL;
+
 static wchar_t chess_figures_symbols[] = {
   FULL_BLOCK_CHAR, 
   W_PAWN_CHAR, W_ROOK_CHAR, W_KNIGHT_CHAR, W_BISHOP_CHAR, W_QUEEN_CHAR, W_KING_CHAR,
@@ -51,8 +54,16 @@ void print_field_control(int *field_control)
   }
 }
 
+static void chess_close(void)
+{
+  if(chess_log!=NULL)
+    fclose(chess_log);
+}
+
 void board_init(chess_figure_t *chess_board)
 {
+   chess_log = fopen("chess.log", "wb");
+   if(chess_log!=NULL) atexit(chess_close);
    memset(chess_board, 0, 64 * sizeof(chess_figure_t));
    memset(captured_white_figures, 0, sizeof(captured_white_figures) * sizeof(chess_figure_t));
    memset(captured_black_figures, 0, sizeof(captured_black_figures) * sizeof(chess_figure_t));
@@ -141,11 +152,18 @@ void board_print(chess_figure_t *chess_board, int *field_control, _Bool display_
 char *get_console_input(void)
 {
   char input[100], *got = NULL;
+  int input_len = -1;
   for(;;) {
-    do {
+    got = NULL;
+    input_len = -1;
+    while(got == NULL && input_len!=5) {
+      memset(input, 0, sizeof(input));
       wprintf(L">");
+      if(feof(stdin)) exit(EXIT_SUCCESS);
       got = fgets(input, sizeof(input), stdin);
-    } while (got != NULL && strlen(got) != 5);
+      if(got!=NULL) input_len=strlen(got);
+    } 
+    wprintf(L"got=%s\n", got);
     got[4]= '\0';
     if(!strcmp(got, "quit") || !strcmp(got, "exit")) exit(EXIT_SUCCESS);
     char x0 = got[0];
@@ -210,6 +228,8 @@ void next_move(chess_figure_t *chess_board)
       else              captured_white_figures[captured_white_idx++] = other;
    }
    //wprintf(L"valid move2: %d %d\n", x1, y1);
+   fprintf(chess_log, "%c%d%c%d\n", x0+'a', y0+1, x1+'a', y1+1);
+   fflush(chess_log);
    do_chess_move(chess_board, x0, y0, x1, y1, True);
    white_on_the_move ^= 1;
 }
