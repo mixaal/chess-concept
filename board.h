@@ -31,4 +31,5 @@ void board_init(chess_figure_t *chess);
 void board_print(chess_figure_t *chess, int *field_control, _Bool display_control);
 char *get_console_input(void);
 void next_move(chess_figure_t *chess);
+int who_is_playing(void);
 #endif

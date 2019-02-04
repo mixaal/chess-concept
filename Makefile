@@ -4,7 +4,7 @@ LIBS=
 RM=rm -f
 
 PROG=chess
-OBJECTS=main.o board.o legal_moves.o chess_control.o
+OBJECTS=main.o board.o legal_moves.o chess_control.o fitness.o
 
 all: $(PROG)
 

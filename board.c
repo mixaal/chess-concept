@@ -22,6 +22,11 @@ static int captured_black_idx = 0;
 
 static int white_on_the_move = 1;
 
+int who_is_playing(void)
+{
+  return white_on_the_move;
+}
+
 void print_field_control(int *field_control)
 {
   for(int y=7; y>=0; y--) {
