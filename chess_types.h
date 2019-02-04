@@ -12,6 +12,7 @@
 #define CTRL_WHITE       0x1
 #define CTRL_BLACK       0x2
 #define CTRL_BOTH        0x3
+#define CTRL_MASK        (CTRL_WHITE|CTRL_BLACK)
 
 #define PLACE_WHITE      0x10
 #define PLACE_BLACK      0x20

@@ -7,6 +7,7 @@
 #include "chess_types.h"
 #include "legal_moves.h"
 #include "board.h"
+#include "chess_control.h"
 
 static wchar_t chess_figures_symbols[] = {
   FULL_BLOCK_CHAR, 
@@ -44,30 +45,6 @@ void print_field_control(void)
       }
     }
     wprintf(L"%s\n", ANSI_COLOR_RESET);
-  }
-}
-
-void compute_field_control(void)
-{
-  for(int i=0; i<64; i++) {
-      if(is_white(chess_board[i])) { field_control[i]=PLACE_WHITE;  }
-      if(is_black(chess_board[i])) { field_control[i]=PLACE_BLACK;  }
-      field_control[i]|=CTRL_NOBODY;
-  }
-  for(int i=0; i<64; i++) {
-    int mask = 0;
-    // Skip empty fields
-    if(chess_board[i] == EMPTY) continue;
-    // Setup masks
-    if(is_white(chess_board[i])) mask=CTRL_WHITE;
-    if(is_black(chess_board[i])) mask=CTRL_BLACK;
-    int x = i % 8;
-    int y = i / 8;
-    move_t legal_moves = get_legal_moves(chess_board, chess_board[i], x , y, True);
-    for(int j=0; j<legal_moves.N; j++) {
-       int offset = legal_moves.x[j] + legal_moves.y[j] * 8;
-       field_control[offset] |= mask;
-    }
   }
 }
 
@@ -216,37 +193,16 @@ void next_move(void)
        wprintf(L"Invalid move: %s\n", err);
      }
    } while (err != NULL);
+   //wprintf(L"valid move: %d %d\n", x1, y1);
    
    // Process to the next state
-   chess_figure_t figure = chess_board[8*y0 + x0];
-   if(figure==W_KING) {
-     if(x0==4 && y0==0 && x1==6 && y1==0) {//castling
-        chess_board[5] = chess_board[7];
-        chess_board[7] = EMPTY;
-     }
-     if(x0==4 && y0==0 && x1==1 && y1==0) {//castling
-        chess_board[2] = chess_board[0];
-        chess_board[0] = EMPTY;
-     }
-   }
-   if(figure==B_KING) {
-     if(x0==4 && y0==7 && x1==6 && y1==7) {//castling
-        chess_board[61] = chess_board[63];
-        chess_board[63] = EMPTY;
-     }
-     if(x0==4 && y0==7 && x1==1 && y1==7) {//castling
-        chess_board[58] = chess_board[56];
-        chess_board[56] = EMPTY;
-     }
-   }
-
    chess_figure_t other  = chess_board[8*y1 + x1];
    if(other!=EMPTY) {
       if(other<=W_KING) captured_black_figures[captured_black_idx++] = other;
       else              captured_white_figures[captured_white_idx++] = other;
    }
-   chess_board[8*y0 + x0] = EMPTY;
-   chess_board[8*y1 + x1] = figure;
+   wprintf(L"valid move2: %d %d\n", x1, y1);
+   do_chess_move(chess_board, x0, y0, x1, y1);
    white_on_the_move ^= 1;
 }
 
@@ -254,7 +210,7 @@ int main(void)
 {
   board_init();
   for(;;) {
-    compute_field_control();
+    compute_field_control(chess_board, field_control);
     board_print(True);
     print_field_control();
     next_move();
