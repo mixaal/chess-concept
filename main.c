@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     board_print(chess_board, field_control, True);
     //print_field_control(field_control);
     wprintf(L"fitness=%.3f mobility=%.3f\n", f, mobility);
-    next_move(chess_board);
+    next_move(chess_board, field_control);
   }
   return EXIT_SUCCESS;
 }

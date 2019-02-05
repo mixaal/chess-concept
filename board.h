@@ -26,10 +26,19 @@
 #define B_KNIGHT_CHAR   L'\u265e'
 #define B_PAWN_CHAR     L'\u265f'
 
+#define FN_WHITE_KING_CHECK "fwkc"
+#define FN_BLACK_KING_CHECK "fbkc"
+
+typedef enum { MOVE, CMD } cmd_t;
+typedef struct { 
+  char  *next_move;
+  cmd_t type ;
+} input_t;
+
 void print_field_control(int *field_control);
 void board_init(chess_figure_t *chess, const char *replay_file);
 void board_print(chess_figure_t *chess, int *field_control, _Bool display_control);
-char *get_console_input(void);
-void next_move(chess_figure_t *chess);
+input_t get_console_input(void);
+void next_move(chess_figure_t *chess, int *field_control);
 int who_is_playing(void);
 #endif

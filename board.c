@@ -163,9 +163,13 @@ void board_print(chess_figure_t *chess_board, int *field_control, _Bool display_
   wprintf(L"    a   b   c   d    e   f   g   h\n");
 }
 
-char *get_console_input(void)
+
+input_t get_console_input(void)
 {
   char input[100], *got = NULL;
+  input_t r;
+  r.next_move = NULL;
+  r.type = MOVE;
   int input_len = -1;
   for(;;) {
     got = NULL;
@@ -182,15 +186,20 @@ char *get_console_input(void)
       }
       got = fgets(input, sizeof(input), input_file);
       if(got!=NULL) input_len=strlen(got);
-    } 
+    }
+    r.next_move = got;
     got[4]= '\0';
     if(!strcmp(got, "quit") || !strcmp(got, "exit")) exit(EXIT_SUCCESS);
+    if(!strcmp(got, FN_WHITE_KING_CHECK) || !strcmp(got, FN_BLACK_KING_CHECK)) {
+      r.type=CMD; 
+      return r;
+    }
     char x0 = got[0];
     char y0 = got[1];
     char x1 = got[2];
     char y1 = got[3];
     wprintf(L"%c %c %c %c\n", x0, y0, x1, y1);
-    if(x0>='a' && x0<='h' && x1>='a' && x1<='h' && y0 >= '1' && y0 <= '8' && y1 >= '1' && y1 <= '8') return got;
+    if(x0>='a' && x0<='h' && x1>='a' && x1<='h' && y0 >= '1' && y0 <= '8' && y1 >= '1' && y1 <= '8') return r;
     else wprintf(L"invalid range\n");
   }
 }
@@ -223,12 +232,27 @@ static char *is_valid_move(chess_figure_t *chess_board, int x0, int y0, int x1, 
   return "your move is not in a set of legal moves";
 }
 
-void next_move(chess_figure_t *chess_board)
+void next_move(chess_figure_t *chess_board, int *field_control)
 {
    char *err = NULL;
    int x0, y0, x1, y1;
+AGAIN:
    do {
-     char *next_move = get_console_input();
+     input_t  r = get_console_input();
+     char *next_move = r.next_move;
+     if(r.type==CMD) {
+       if(!strcmp(next_move, FN_BLACK_KING_CHECK)) {
+          _Bool check = black_king_check(field_control, False);
+          wprintf(L"debug: black_king_check(): %d\n", check);
+          wprintf(L"debug: king [%c%d]: 0x%04x\n", get_black_king_x()+'a', get_black_king_y()+1, field_control[get_black_king_y()*8+get_black_king_x()]);
+       }
+       if(!strcmp(next_move, FN_WHITE_KING_CHECK)) {
+          _Bool check = white_king_check(field_control, False);
+          wprintf(L"debug: white_king_check(): %d\n", check);
+          wprintf(L"debug: king [%c%d]: 0x%04x\n", get_white_king_x()+'a', get_white_king_y()+1, field_control[get_white_king_y()*8+get_white_king_x()]);
+       }
+       goto AGAIN;
+     }
      x0 = next_move[0] - 'a';
      x1 = next_move[2] - 'a';
      y0 = next_move[1] - '1';

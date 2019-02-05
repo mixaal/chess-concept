@@ -3,6 +3,10 @@
 
 #include "chess_types.h"
 
+int get_white_king_y(void) ;
+int get_white_king_x(void) ;
+int get_black_king_y(void) ;
+int get_black_king_x(void) ;
 void set_white_king(int x, int y, int tx, int ty, _Bool real_board);
 void set_black_king(int x, int y, int tx, int ty, _Bool real_board);
 _Bool is_white(chess_figure_t figure);

@@ -19,20 +19,43 @@ static int white_king_y = 0;
 static int black_king_x = 4;
 static int black_king_y = 7;
 
+int get_white_king_x(void) 
+{ 
+  return white_king_x; 
+}
+
+int get_white_king_y(void) 
+{ 
+  return white_king_y; 
+}
+
+int get_black_king_x(void) 
+{ 
+  return black_king_x; 
+}
+
+int get_black_king_y(void) 
+{ 
+  return black_king_y; 
+}
+
+
 void set_white_king(int x, int y, int tx, int ty, _Bool real_board)
 {
-  if(real_board && x!=tx && y!=tx)  
+  if(real_board && x!=tx && y!=tx)  {
     white_king_moved = True;
-  white_king_x = tx;
-  white_king_y = ty;
+    white_king_x = tx;
+    white_king_y = ty;
+  }
 }
 
 void set_black_king(int x, int y, int tx, int ty, _Bool real_board)
 {
-  if(real_board && x!=tx && y!=tx)  
+  if(real_board && x!=tx && y!=tx)  {
     black_king_moved = True;
-  black_king_x = tx;
-  black_king_y = ty;
+    black_king_x = tx;
+    black_king_y = ty;
+  }
 }
 
 _Bool is_white(chess_figure_t figure)
