@@ -28,16 +28,20 @@ _Bool is_black(chess_figure_t figure)
 
 _Bool white_king_check(chess_t *chess)
 {
-  int white_king_x, white_king_y;
+  int king_x, king_y;
+#if 0
   for(int i=0; i<64; i++) {
      if(chess->board[i]==W_KING) {
-        white_king_x = i % 8;
-        white_king_y = i / 8;
+        king_x = i % 8;
+        king_y = i / 8;
         break;
      }
   }
-  if(_trace) wprintf(L"white_king_check(): chess=%p [%c%d]\n", chess, white_king_x+'a', white_king_y+1); 
-  int control = chess -> field_control[white_king_x + 8*white_king_y] & CTRL_MASK;
+#endif
+  king_x = chess -> white_king_x;
+  king_y = chess -> white_king_y;
+  if(_trace) wprintf(L"white_king_check(): chess=%p [%c%d]\n", chess, king_x+'a', king_y+1); 
+  int control = chess -> field_control[king_x + 8*king_y] & CTRL_MASK;
   if (control&CTRL_BLACK) {
     if(_trace) wprintf(L"white_king_checked!!! for chess=%p\n", chess);
     chess -> white_king_checked = True;
@@ -48,9 +52,20 @@ _Bool white_king_check(chess_t *chess)
 
 _Bool black_king_check(chess_t *chess)
 {
-  int black_king_x = chess -> black_king_x;
-  int black_king_y = chess -> black_king_y;
-  int control = chess -> field_control[black_king_x + 8*black_king_y] & CTRL_MASK;
+  int king_x, king_y;
+#if 0
+  for(int i=0; i<64; i++) {
+     if(chess->board[i]==B_KING) {
+        king_x = i % 8;
+        king_y = i / 8;
+        break;
+     }
+  }
+#endif
+
+  king_x = chess -> black_king_x;
+  king_y = chess -> black_king_y;
+  int control = chess -> field_control[king_x + 8*king_y] & CTRL_MASK;
   if (control&CTRL_WHITE) {
     chess -> black_king_checked = True;
     return True;
@@ -63,6 +78,8 @@ void set_white_king(chess_t *chess, int x0, int y0, int x1, int y1)
 {
    if(x0==x1 && y0==y1) return;
    chess -> board[x1 + 8*y1] = W_KING;
+   chess -> white_king_x = x1;
+   chess -> white_king_y = y1;
    chess -> white_king_moved  = True;
 }
 
@@ -70,6 +87,8 @@ void set_black_king(chess_t *chess, int x0, int y0, int x1, int y1)
 {
    if(x0==x1 && y0==y1) return;
    chess -> board[x1 + 8*y1] = B_KING;
+   chess -> black_king_x = x1;
+   chess -> black_king_y = y1;
    chess -> black_king_moved  = True;
 }
 

@@ -112,17 +112,32 @@ static void print_empty(_Bool display_control, int idx, int control)
  
 }
 
-void board_print(chess_t *chess, _Bool display_control)
+void board_print(chess_t *chess, float mobility, _Bool display_control)
 {
   chess_figure_t *chess_board = chess -> board;
   int *field_control = chess -> field_control;
-  if(white_on_the_move) wprintf(L"WHITE is playing:"); 
-  else                  wprintf(L"BLACK is playing:"); 
-  if(white_king_check(chess)) {
-       wprintf(L"  !!! white king check !!!");
+  _Bool game_over = False;
+  if(white_on_the_move) {
+    wprintf(L"WHITE is playing:"); 
+    if(white_king_check(chess) && (int)(mobility) == 0) {
+       wprintf(L"  !!! white king check-mate !!!");
+       game_over = True;
+    }
+  } 
+  else {
+    wprintf(L"BLACK is playing:"); 
+    if(black_king_check(chess) && (int)(mobility) == 0) {
+       wprintf(L"  !!! black king check-mate !!!");
+       game_over = True;
+    }
   }
-  if(black_king_check(chess)) {
-       wprintf(L"  !!! black king check !!!");
+  if(!game_over) {
+    if(white_king_check(chess)) {
+      wprintf(L"  !!! white king check !!!");
+    } 
+    if(black_king_check(chess)) {
+      wprintf(L"  !!! black king check !!!");
+    }
   }
   for(int y=7; y>=0; y--) {
      int idx = y&1;
@@ -164,6 +179,7 @@ void board_print(chess_t *chess, _Bool display_control)
   }
   wprintf(L"%lc", NEW_LINE_CHAR);
   wprintf(L"    a   b   c   d    e   f   g   h\n");
+  if(game_over) exit(EXIT_SUCCESS);
 }
 
 

@@ -25,8 +25,6 @@ void chess_init(chess_t *chess, const char *replay_file)
   board_init(chess->board, replay_file);
 }
 
-
-
 int main(int argc, char *argv[])
 {
   setlocale(LC_CTYPE, "en_US.UTF-8");
@@ -40,7 +38,7 @@ int main(int argc, char *argv[])
     float f = evaluate_position(&chess, who_is_playing());
     float mobility = mobility_evaluation(&chess, who_is_playing());
     compute_field_control(&chess);
-    board_print(&chess, True);
+    board_print(&chess, mobility, True);
     //print_field_control(field_control);
     wprintf(L"fitness=%.3f mobility=%.3f\n", f, mobility);
     next_move(&chess);
