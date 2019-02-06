@@ -3,6 +3,7 @@
 
 #include "chess_types.h"
 
+void compute_field_control(chess_t *chess);
 void set_trace(int  t);
 _Bool is_white(chess_figure_t figure);
 _Bool is_black(chess_figure_t figure);

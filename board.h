@@ -9,6 +9,7 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_BOLD          "\x1b[1m"
 
 #define FULL_BLOCK_CHAR L'\u2588'
 #define SPACE_CHAR      L'\x20'
@@ -26,21 +27,19 @@
 #define B_KNIGHT_CHAR   L'\u265e'
 #define B_PAWN_CHAR     L'\u265f'
 
-#define FN_WHITE_KING_CHECK "fwkc"
-#define FN_BLACK_KING_CHECK "fbkc"
+#define FN_WHITE_KING_CHECK "wkcs"
+#define FN_BLACK_KING_CHECK "bkcs"
 #define TOGGLE_TRACE        "trce"
-
-typedef enum { MOVE, CMD } cmd_t;
-typedef struct { 
-  char  *next_move;
-  cmd_t type ;
-} input_t;
+#define TOGGLE_FIELD_CONTROL  "tofc"
+#define DISPLAY_HELP        "help"
+#define SHOW_BOARD          "show"
 
 _Bool get_trace(void) ;
 void print_field_control(int *field_control);
-void board_init(chess_figure_t *chess, const char *replay_file);
-void board_print(chess_t *chess, float mobility, _Bool display_control);
+void board_print(chess_t *chess);
 input_t get_console_input(void);
-void next_move(chess_t *chess);
-int who_is_playing(void);
+void init_input_file(const char *replay_file);
+void dispatch_to_helpers(chess_t *chess, char *next_move);
+void write_move(int x0, int y0, int x1, int y1);
+
 #endif

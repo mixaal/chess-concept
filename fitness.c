@@ -3,29 +3,30 @@
 
 static float material_evaluation(chess_t *chess);
 
-float evaluate_position(chess_t *chess, int white_is_playing)
+float evaluate_position(chess_t *chess)
 {
   float s = 0.0f;
   s+=material_evaluation(chess);
-  return (white_is_playing)  ? s : -s;
+  return (chess->white_on_move)  ? s : -s;
 }
 
-float mobility_evaluation(chess_t *chess, int white_is_playing) 
+float mobility_evaluation(chess_t *chess) 
 {
    int total_moves = 0;
    for(int i=0; i<64; i++) {
     if(!is_white(chess->board[i]) && !is_black(chess->board[i])) continue;
     if(is_white(chess->board[i])) {
-       if(!white_is_playing) continue;
+       if(!chess->white_on_move) continue;
        move_t legal_moves  = get_legal_moves(chess, chess->board[i], i%8, i/8, False);
        total_moves += legal_moves.N;
     }
     else {
-       if(white_is_playing) continue;
+       if(chess->white_on_move) continue;
        move_t legal_moves  = get_legal_moves(chess, chess->board[i], i%8, i/8, False);
        total_moves += legal_moves.N;
     }
    }
+   chess -> mobility = total_moves;
    return total_moves;
 }
 

@@ -17,6 +17,7 @@
 #define PLACE_WHITE      0x10
 #define PLACE_BLACK      0x20
 
+
 typedef enum { 
   EMPTY,
   W_PAWN, W_ROOK, W_KNIGHT, W_BISHOP, W_QUEEN, W_KING, 
@@ -36,6 +37,22 @@ typedef struct {
   int black_king_x, black_king_y;
   _Bool white_king_moved, black_king_moved;
   _Bool white_king_checked, black_king_checked;
+  float mobility;
+  _Bool game_over;
+  chess_figure_t captured_white_figures[16];
+  chess_figure_t captured_black_figures[16];
+  int captured_black_idx;
+  int captured_white_idx;
+  int white_on_move;
 } chess_t;
+
+typedef enum { MOVE, CMD } cmd_t;
+
+typedef struct { 
+  char  *next_move;
+  cmd_t type ;
+} input_t;
+
+typedef input_t (get_input_t)(void);
 
 #endif /* __MIX_CHESS_TYPES_H__ */
