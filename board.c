@@ -150,13 +150,26 @@ void board_print(chess_t *chess)
         wprintf(L"%s", ANSI_COLOR_RESET); 
         idx++;
      }
-     if(y==0) for(int i=0;i<chess->captured_white_idx;i++) {
-        if(chess->captured_white_figures[i]!=0)
-          wprintf(L" %lc ", chess_figures_symbols[chess->captured_white_figures[i]]);
+     int rows = chess->captured_white_idx / 5;
+     if(y<=rows) {
+       int _min = chess->captured_white_idx;
+       //wprintf(L"y=%d rows=%d _min=%d\n", y, rows, _min); 
+       if(_min>5+y*5) _min = 5+y*5;
+       for(int i=y*5;i<_min;i++) {
+         if(chess->captured_white_figures[i]!=0)
+            wprintf(L" %lc ", chess_figures_symbols[chess->captured_white_figures[i]]);
+       }
      }
-     if(y==7) for(int i=0;i<chess->captured_black_idx;i++) {
-        if(chess->captured_black_figures[i]!=0)
-          wprintf(L" %lc ", chess_figures_symbols[chess->captured_black_figures[i]]);
+     rows = chess->captured_black_idx / 5;
+     int jj = 7 - y;;
+     if(y>=7-rows) {
+       int _min = chess->captured_black_idx;
+       if(_min>5+jj*5) _min = 5+jj*5;
+       //wprintf(L"y=%d rows=%d _min=%d\n", y, rows, _min); 
+       for(int i=jj*5;i<_min;i++) {
+         if(chess->captured_black_figures[i]!=0)
+            wprintf(L" %lc ", chess_figures_symbols[chess->captured_black_figures[i]]);
+       }
      }
   }
   wprintf(L"%lc", NEW_LINE_CHAR);
