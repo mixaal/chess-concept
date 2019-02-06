@@ -29,5 +29,13 @@ typedef struct {
 } move_t;
 
 
+typedef struct {
+  chess_figure_t board[64];
+  int            field_control[64];
+  int white_king_x, white_king_y;
+  int black_king_x, black_king_y;
+  _Bool white_king_moved, black_king_moved;
+  _Bool white_king_checked, black_king_checked;
+} chess_t;
 
 #endif /* __MIX_CHESS_TYPES_H__ */

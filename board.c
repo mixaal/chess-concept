@@ -9,9 +9,10 @@
 #include "board.h"
 #include "chess_control.h"
 
-
 static FILE *chess_log = NULL;
 static FILE *input_file = NULL;
+
+static int _trace = 0;
 
 _Bool replay_as_parameter = False;
 
@@ -111,14 +112,16 @@ static void print_empty(_Bool display_control, int idx, int control)
  
 }
 
-void board_print(chess_figure_t *chess_board, int *field_control, _Bool display_control)
+void board_print(chess_t *chess, _Bool display_control)
 {
+  chess_figure_t *chess_board = chess -> board;
+  int *field_control = chess -> field_control;
   if(white_on_the_move) wprintf(L"WHITE is playing:"); 
   else                  wprintf(L"BLACK is playing:"); 
-  if(white_king_check(field_control, True)) {
+  if(white_king_check(chess)) {
        wprintf(L"  !!! white king check !!!");
   }
-  if(black_king_check(field_control, True)) {
+  if(black_king_check(chess)) {
        wprintf(L"  !!! black king check !!!");
   }
   for(int y=7; y>=0; y--) {
@@ -190,7 +193,7 @@ input_t get_console_input(void)
     r.next_move = got;
     got[4]= '\0';
     if(!strcmp(got, "quit") || !strcmp(got, "exit")) exit(EXIT_SUCCESS);
-    if(!strcmp(got, FN_WHITE_KING_CHECK) || !strcmp(got, FN_BLACK_KING_CHECK)) {
+    if(!strcmp(got, TOGGLE_TRACE) || !strcmp(got, FN_WHITE_KING_CHECK) || !strcmp(got, FN_BLACK_KING_CHECK) || (got[0]=='l' && got[1]=='e' )) {
       r.type=CMD; 
       return r;
     }
@@ -204,10 +207,24 @@ input_t get_console_input(void)
   }
 }
 
-static char *is_valid_move(chess_figure_t *chess_board, int x0, int y0, int x1, int y1)
+static void show_legal_moves(chess_t *chess, chess_figure_t figure, int x0, int y0)
+{
+  move_t legal_moves = get_legal_moves(chess, figure, x0, y0, False);
+  if(legal_moves.N==0) {
+    wprintf(L"no legal moves for this figure");
+  }
+  
+  wprintf(L"Legal move: [");
+  for(int i=0; i<legal_moves.N; i++) {
+    wprintf(L"%c%d,", 'a'+legal_moves.x[i], 1+legal_moves.y[i]);
+  }
+  wprintf(L"]\n");
+}
+
+static char *is_valid_move(chess_t *chess, int x0, int y0, int x1, int y1)
 {
   
-  chess_figure_t figure = chess_board[8*y0 + x0];
+  chess_figure_t figure = chess->board[8*y0 + x0];
   if(figure == EMPTY) {
     return "nobody standing there";
   }
@@ -216,7 +233,7 @@ static char *is_valid_move(chess_figure_t *chess_board, int x0, int y0, int x1, 
   } else {
     if(!is_black(figure)) return "black is on the move, this figure is a white one"; 
   }
-  move_t legal_moves = get_legal_moves(chess_board, figure, x0, y0, False);
+  move_t legal_moves = get_legal_moves(chess, figure, x0, y0, False);
   if(legal_moves.N==0) {
     return "no legal moves for this figure";
   }
@@ -232,7 +249,7 @@ static char *is_valid_move(chess_figure_t *chess_board, int x0, int y0, int x1, 
   return "your move is not in a set of legal moves";
 }
 
-void next_move(chess_figure_t *chess_board, int *field_control)
+void next_move(chess_t *chess)
 {
    char *err = NULL;
    int x0, y0, x1, y1;
@@ -241,15 +258,28 @@ AGAIN:
      input_t  r = get_console_input();
      char *next_move = r.next_move;
      if(r.type==CMD) {
+       if(next_move[0] == 'l' && next_move[1] == 'e'){
+          wprintf(L"debug: legal moves for: %c%c: start\n", next_move[2], next_move[3]);
+          int xx = next_move[2] - 'a';
+          int yy = next_move[3] - '1';
+          chess_figure_t figure = chess->board[xx + yy*8];
+          show_legal_moves(chess, figure, xx, yy);
+          wprintf(L"debug: legal moves for: %c%c: end\n", next_move[2], next_move[3]);
+       }
+       if(!strcmp(next_move, TOGGLE_TRACE)) {
+          _trace ^= 1;
+          wprintf(L"debug: trace: %d\n", _trace);
+          set_trace(_trace);
+       }
        if(!strcmp(next_move, FN_BLACK_KING_CHECK)) {
-          _Bool check = black_king_check(field_control, False);
+          _Bool check = black_king_check(chess);
           wprintf(L"debug: black_king_check(): %d\n", check);
-          wprintf(L"debug: king [%c%d]: 0x%04x\n", get_black_king_x()+'a', get_black_king_y()+1, field_control[get_black_king_y()*8+get_black_king_x()]);
+          wprintf(L"debug: king [%c%d]: 0x%04x\n", chess->black_king_x+'a', chess->black_king_y+1, chess->field_control[chess->black_king_y*8+chess->black_king_x]);
        }
        if(!strcmp(next_move, FN_WHITE_KING_CHECK)) {
-          _Bool check = white_king_check(field_control, False);
+          _Bool check = white_king_check(chess);
           wprintf(L"debug: white_king_check(): %d\n", check);
-          wprintf(L"debug: king [%c%d]: 0x%04x\n", get_white_king_x()+'a', get_white_king_y()+1, field_control[get_white_king_y()*8+get_white_king_x()]);
+          wprintf(L"debug: king [%c%d]: 0x%04x\n", chess->white_king_x+'a', chess->white_king_y+1, chess->field_control[chess->white_king_y*8+chess->white_king_x]);
        }
        goto AGAIN;
      }
@@ -257,7 +287,7 @@ AGAIN:
      x1 = next_move[2] - 'a';
      y0 = next_move[1] - '1';
      y1 = next_move[3] - '1';
-     err = is_valid_move(chess_board, x0, y0, x1, y1);
+     err = is_valid_move(chess, x0, y0, x1, y1);
      if(err!=NULL) {
        wprintf(L"Invalid move: %s\n", err);
      }
@@ -265,7 +295,7 @@ AGAIN:
    //wprintf(L"valid move: %d %d\n", x1, y1);
    
    // Process to the next state
-   chess_figure_t other  = chess_board[8*y1 + x1];
+   chess_figure_t other  = chess->board[8*y1 + x1];
    if(other!=EMPTY) {
       if(other<=W_KING) captured_black_figures[captured_black_idx++] = other;
       else              captured_white_figures[captured_white_idx++] = other;
@@ -273,6 +303,6 @@ AGAIN:
    //wprintf(L"valid move2: %d %d\n", x1, y1);
    fprintf(chess_log, "%c%d%c%d\n", x0+'a', y0+1, x1+'a', y1+1);
    fflush(chess_log);
-   do_chess_move(chess_board, x0, y0, x1, y1, True);
+   do_chess_move(chess, x0, y0, x1, y1, True);
    white_on_the_move ^= 1;
 }

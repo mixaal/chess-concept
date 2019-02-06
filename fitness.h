@@ -40,8 +40,8 @@
 #define KING_NO_ENEMY_PAWN_ADJ                       9
 #define KING_PRESSURE_MULT                           4
 
-float evaluate_position(chess_figure_t *chess_board, int white_is_playing);
-float mobility_evaluation(chess_figure_t *chess_board, int white_is_playing);
+float evaluate_position(chess_t *chess, int white_is_playing);
+float mobility_evaluation(chess_t *chess, int white_is_playing);
 
 
 #endif /* __MIX_CHESS_FITNESS_H__ */

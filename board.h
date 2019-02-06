@@ -28,6 +28,7 @@
 
 #define FN_WHITE_KING_CHECK "fwkc"
 #define FN_BLACK_KING_CHECK "fbkc"
+#define TOGGLE_TRACE        "trce"
 
 typedef enum { MOVE, CMD } cmd_t;
 typedef struct { 
@@ -35,10 +36,11 @@ typedef struct {
   cmd_t type ;
 } input_t;
 
+_Bool get_trace(void) ;
 void print_field_control(int *field_control);
 void board_init(chess_figure_t *chess, const char *replay_file);
-void board_print(chess_figure_t *chess, int *field_control, _Bool display_control);
+void board_print(chess_t *chess, _Bool display_control);
 input_t get_console_input(void);
-void next_move(chess_figure_t *chess, int *field_control);
+void next_move(chess_t *chess);
 int who_is_playing(void);
 #endif
