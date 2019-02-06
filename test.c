@@ -25,8 +25,17 @@ int main(int argc, char *argv[])
 {
   
   setlocale(LC_CTYPE, "en_US.UTF-8");
-  test_play(&chess, check_mate, sizeof(check_mate)/sizeof(char*), True);
+  _Bool display = False;
+  test_play(&chess, check_mate, sizeof(check_mate)/sizeof(char*), display);
   assert_ieq(1, chess.game_over, "check-mate scenario");
+  test_play(&chess, check_on_white, sizeof(check_on_white)/sizeof(char*), display);
+  assert_ieq(1, white_king_check(&chess), "white king checked");
+  move_t m = get_legal_moves(&chess, W_KING, 4, 0, False);
+  assert_ieq(2, m.N, "only two positions allowed [d1, d2]");
+  assert_ieq(3, m.x[0], "d1 position");
+  assert_ieq(0, m.y[0], "d1 position");
+  assert_ieq(3, m.x[1], "d2 position");
+  assert_ieq(1, m.y[1], "d2 position");
   return rc;
 }
 
