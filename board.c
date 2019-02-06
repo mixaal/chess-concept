@@ -219,7 +219,7 @@ input_t get_console_input(void)
     char y0 = got[1];
     char x1 = got[2];
     char y1 = got[3];
-    wprintf(L"%c %c %c %c\n", x0, y0, x1, y1);
+    //wprintf(L"%c %c %c %c\n", x0, y0, x1, y1);
     if(x0>='a' && x0<='h' && x1>='a' && x1<='h' && y0 >= '1' && y0 <= '8' && y1 >= '1' && y1 <= '8') return r;
     else wprintf(L"invalid range\n");
   }
