@@ -11,10 +11,10 @@ all: $(PROG)
 $(PROG): main.o $(OBJECTS)
 	$(CC) -o $@ main.o $(OBJECTS) $(LIBS)
 
-test: test.o $(OBJECTS)
-	$(CC) -o $@ test.o $(OBJECTS)
+test: test.o test_helper.o $(OBJECTS)
+	$(CC) -o $@ test.o test_helper.o $(OBJECTS)
 	./test
 
 clean:
-	$(RM) $(PROG) $(OBJECTS) main.o test.o test
+	$(RM) $(PROG) $(OBJECTS) main.o test.o test test_helper.o
 
